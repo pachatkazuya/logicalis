@@ -1,0 +1,49 @@
+name: ci-build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+permissions:
+  contents: read
+  id-token: write    # for OIDC to Azure
+  packages: write
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install deps & test
+        run: |
+          cd app
+          npm ci
+          npm test
+
+      - name: Azure login (OIDC) — placeholder
+        if: ${{ github.ref == 'refs/heads/main' }}
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build container
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          cd app
+          docker build -t hello-web:v0.1.0 .
+
+      - name: Push to ACR — placeholder
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          echo "TODO: az acr login + docker tag + docker push"
+          echo "Set up federated credentials and fill in ACR name in a later phase."

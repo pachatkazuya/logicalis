@@ -1,0 +1,33 @@
+# azure-pipelines.yml
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+- stage: Build
+  jobs:
+  - job: BuildAndTest
+    steps:
+    - checkout: self
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '18.x'
+    - script: |
+        cd app
+        npm ci
+        npm test
+      displayName: 'Install & Test'
+
+- stage: PushImage
+  dependsOn: Build
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  jobs:
+  - job: BuildAndPush
+    steps:
+    - checkout: self
+    - script: |
+        echo "TODO: Use AzureCLI@2 to az acr login then docker build/tag/push"
+        echo "Create a Service Connection (or OIDC) named 'sc-azure' and reference it below."
+      displayName: 'Placeholder push'

@@ -1,0 +1,12 @@
+{
+  "name": "hello-web",
+  "version": "0.1.0",
+  "description": "Minimal Node web app for DevOps CI/CD lab",
+  "main": "server.js",
+  "scripts": {
+    "test": "jest --runInBand"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
