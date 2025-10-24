@@ -7,12 +7,12 @@ on:
 
 permissions:
   contents: read
-  id-token: write    # for OIDC to Azure
-  packages: write
+  id-token: write   # REQUIRED for OIDC
 
 jobs:
-  build-and-test:
+  build-and-push:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,7 +28,8 @@ jobs:
           npm ci
           npm test
 
-      - name: Azure login (OIDC) — placeholder
+      # OIDC login to Azure using the three repo secrets
+      - name: Azure login (OIDC)
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: azure/login@v2
         with:
@@ -36,14 +37,17 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Build container
+      - name: Build image
         if: ${{ github.ref == 'refs/heads/main' }}
         run: |
           cd app
           docker build -t hello-web:v0.1.0 .
 
-      - name: Push to ACR — placeholder
+      - name: Push to ACR
         if: ${{ github.ref == 'refs/heads/main' }}
         run: |
-          echo "TODO: az acr login + docker tag + docker push"
-          echo "Set up federated credentials and fill in ACR name in a later phase."
+          ACR_LOGIN_SERVER=$(az acr show -n acrdevopslab2025 --query loginServer -o tsv)
+          az acr login --name acrdevopslab2025
+          docker tag hello-web:v0.1.0 $ACR_LOGIN_SERVER/hello-web:v0.1.0
+          docker push $ACR_LOGIN_SERVER/hello-web:v0.1.0
+
